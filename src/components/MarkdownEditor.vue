@@ -323,21 +323,23 @@ export default {
 			if (mermaidTimeout) clearTimeout(mermaidTimeout);
 
 			// Try cache first
-			let els = document.getElementsByClassName("mermaid");
-			const uncached = [];
-			for (let i = 0; i < els.length; ++i) {
-				const hash = md5(els[i].textContent.trim()).toString();
-				if (cache.mermaid[hash]) {
-					els[i].innerHTML = cache.mermaid[hash];
-					// To prevent from rendering it again
-					els[i].className = 'mermaid-cached';
+			if (process.browser) {
+				let els = document.getElementsByClassName("mermaid");
+				const uncached = [];
+				for (let i = 0; i < els.length; ++i) {
+					const hash = md5(els[i].textContent.trim()).toString();
+					if (cache.mermaid[hash]) {
+						els[i].innerHTML = cache.mermaid[hash];
+						// To prevent from rendering it again
+						els[i].className = 'mermaid-cached';
 
-					// This el has been **removed** from els
-					--i;
-					continue;
+						// This el has been **removed** from els
+						--i;
+						continue;
+					}
+					// Record the index for caching later
+					uncached.push(hash);
 				}
-				// Record the index for caching later
-				uncached.push(hash);
 			}
 
 			if (uncached.length) 
@@ -345,10 +347,12 @@ export default {
 					try {
 						mermaid.init();
 						// Update cache
-						els = document.getElementsByClassName("mermaid");
-						for (let i = 0; i < els.length; ++i) {
-							if (uncached[i])
-								cache.mermaid[uncached[i]] = els[i].innerHTML;
+						if (process.browser) {
+							els = document.getElementsByClassName("mermaid");
+							for (let i = 0; i < els.length; ++i) {
+								if (uncached[i])
+									cache.mermaid[uncached[i]] = els[i].innerHTML;
+							}
 						}
 					} catch (err) {}
 					mermaidTimeout = null;
